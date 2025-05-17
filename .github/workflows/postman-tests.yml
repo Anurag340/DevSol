@@ -7,50 +7,60 @@ on:
     branches: [ main ]
 
 jobs:
-  newman-tests:
+  api-tests:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      - name: Install dependencies
-        run: npm install
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
 
-      - name: Install Newman
-        run: npm install -g newman
+    - name: Start backend
+      working-directory: ./backend
+      run: |
+        nohup npm run dev > server.log 2>&1 &
+        sleep 5
 
-      - name: Start the backend server
-        run: |
-          npm start &
-          sleep 10 # Wait for the server to start
+    - name: Wait for backend to be ready
+      run: |
+        until curl --output /dev/null --silent --head --fail http://localhost:3000; do
+          echo "Waiting for backend to start..."
+          sleep 2
+        done
 
-        env:
-          PORT: 3000
-          MONGODB_URI: mongodb://127.0.0.1/devsol
-          JWT_SECRET: devsol_secret
-          REDIS_HOST: redis-16274.crce182.ap-south-1-1.ec2.redns.redis-cloud.com
-          REDIS_PORT: 16274
-          REDIS_PASSWORD: OIgldb1ehMqfN7Jvqnoi6VoOlhSJZAUA
+    - name: Install Newman & HTML Reporter
+      run: |
+        npm install -g newman
+        npm install -g newman-reporter-html
 
-      - name: Run Postman tests
-        run: |
-          newman run postman/SOEN.postman_collection.json \
-            -e postman/SOEN.postman_environment.json \
-            --reporters cli,html \
-            --reporter-html-export newman/report.html
+    - name: Run Postman Tests
+      run: |
+        newman run postman/SOEN.postman_collection.json \
+          -e postman/SOEN.postman_environment.json \
+          --reporters cli,html \
+          --reporter-html-export newman-report.html \
+          --delay-request 500
 
-      - name: Upload Postman HTML report
-        uses: actions/upload-artifact@v4
-        with:
-          name: postman-report
-          path: backend/newman/report.html
-
+    - name: Upload Newman HTML Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: newman-report
+        path: newman-report.html

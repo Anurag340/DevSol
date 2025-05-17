@@ -1,0 +1,55 @@
+name: Run Postman API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  newman-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Start the backend server
+        run: |
+          npm start &
+          sleep 10 # Wait for the server to start
+
+        env:
+          PORT: 3000
+          MONGODB_URI: mongodb://127.0.0.1/devsol
+          JWT_SECRET: devsol_secret
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ""
+
+      - name: Run Postman tests
+        run: |
+          newman run postman/SOEN.postman_collection.json \
+            -e postman/SOEN.postman_environment.json \
+            --reporters cli,html \
+            --reporter-html-export newman/report.html
+
+      - name: Upload Postman HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: postman-report
+          path: backend/newman/report.html

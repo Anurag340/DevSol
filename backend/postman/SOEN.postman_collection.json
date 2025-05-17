@@ -1,0 +1,156 @@
+{
+    "info": {
+        "name": "DevSol API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "User - Register",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:3000/users/register",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "path": [
+                        "users",
+                        "register"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"email\": \"test@example.com\", \"password\": \"123456\" }"
+                }
+            }
+        },
+        {
+            "name": "User - Login",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const jsonData = pm.response.json();",
+                            "pm.environment.set(\"jwt_token\", jsonData.token);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:3000/users/login",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "path": [
+                        "users",
+                        "login"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"email\": \"test@example.com\", \"password\": \"123456\" }"
+                }
+            }
+        },
+        {
+            "name": "User - Profile",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:3000/users/profile",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "path": [
+                        "users",
+                        "profile"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Project - Create",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:3000/projects/create",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "path": [
+                        "projects",
+                        "create"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"name\": \"New Project\" }"
+                }
+            }
+        },
+        {
+            "name": "Project - Get All",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:3000/projects/all",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3000",
+                    "path": [
+                        "projects",
+                        "all"
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -49,7 +49,8 @@ jobs:
             --reporter-html-export newman/report.html
 
       - name: Upload Postman HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: postman-report
           path: backend/newman/report.html
+

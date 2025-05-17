@@ -1,17 +1,17 @@
-name: Backend API Tests
+name: CI - DevSol Postman Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -19,28 +19,50 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Docker Compose
+      - name: Install docker-compose
         run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+          docker-compose version
 
-      - name: Start backend and dependencies
+      - name: Create backend .env file
+        run: |
+          cat <<EOF > backend/.env
+          PORT=3000
+          MONGODB_URI=mongodb://mongo/devsol
+          JWT_SECRET=devsol_secret
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          REDIS_PASSWORD=
+          GOOGLE_AI_KEY=dummy_google_key
+          EOF
+
+      - name: Start Docker containers
         run: docker-compose -f docker-compose.yml up -d
 
       - name: Wait for backend to be ready
         run: |
-          for i in {1..60}; do
+          echo "Waiting for backend to start..."
+          for i in {1..30}; do
             if curl -s http://localhost:3000/health; then
-              echo "Backend is ready"
-              exit 0
-            else
-              echo "Waiting for backend to start..."
-              sleep 1
+              echo "Backend is up!"
+              break
             fi
+            sleep 3
           done
-          echo "Backend failed to start within 60 seconds"
-          exit 1
 
-      - name: Run Newman API tests
-        run: newman run backend/postman/SOEN.postman_collection.json -e backend/postman/SOEN.postman_environment.json
+      - name: Install Newman
+        run: npm install -g newman newman-reporter-html
+
+      - name: Run Postman Tests
+        run: |
+          newman run backend/postman/SOEN.postman_collection.json \
+            -e backend/postman/SOEN.postman_environment.json \
+            --reporters cli,html \
+            --reporter-html-export newman-report.html
+
+      - name: Upload Newman HTML Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-html-report
+          path: newman-report.html

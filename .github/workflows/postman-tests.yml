@@ -37,9 +37,9 @@ jobs:
           PORT: 3000
           MONGODB_URI: mongodb://127.0.0.1/devsol
           JWT_SECRET: devsol_secret
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          REDIS_PASSWORD: ""
+          REDIS_HOST: redis-16274.crce182.ap-south-1-1.ec2.redns.redis-cloud.com
+          REDIS_PORT: 16274
+          REDIS_PASSWORD: OIgldb1ehMqfN7Jvqnoi6VoOlhSJZAUA
 
       - name: Run Postman tests
         run: |
